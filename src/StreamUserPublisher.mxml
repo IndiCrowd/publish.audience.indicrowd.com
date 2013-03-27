@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   width="300" height="188" minWidth="100" minHeight="100" initialize="init()">
+	<fx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+			import org.osmf.events.MediaPlayerStateChangeEvent;
+			import org.osmf.media.*;
+			
+			private var clientHaveCamera:Boolean = false;
+			private var clientUseCamera:Boolean = false;
+			private var clientWidth:int = 100;
+			private var clientHeight:int = 100;
+			private var clientFPS:int = 3;
+			private var clientPublishAddr:String = "rtmp://infty123.iptime.org/live_user";
+			private var clientPublishConn:NetConnection;
+			[Bindable]
+			private var clientPublishStr:String;
+			[Bindable]
+			private var clientDefaultImage:String;
+			private var clientPublishStream:NetStream;
+			
+			
+			private var camera:Camera;
+			private var microphone:Microphone;
+			
+			private var videoEventsDisabled:Boolean = false;
+			
+			
+			public function setClientPublishStr(substr:String):void
+			{
+				clientPublishStr = substr;
+			}
+			
+			public function setClientDefaultImage(img:String):void
+			{
+				clientDefaultImage = img;	
+			}
+			
+			
+			private function init():void
+			{
+				startNetwork();
+					
+				clientPublishStr =  FlexGlobals.topLevelApplication.parameters.clientPublishStr;
+				clientDefaultImage =  FlexGlobals.topLevelApplication.parameters.clientDefaultImage;
+				
+				videoPubDefaultImage.source = clientDefaultImage;
+				
+				// Callback 함수 등록
+				flash.external.ExternalInterface.addCallback("setClientPublishStr", setClientPublishStr);
+				flash.external.ExternalInterface.addCallback("setClientDefaultImage", setClientDefaultImage);
+			}
+			
+			
+			private function ncOnStatus(infoObject:NetStatusEvent):void
+			{
+				trace("nc: "+infoObject.info.code+" ("+infoObject.info.description+")");
+				
+				if (infoObject.info.code == "NetConnection.Connect.Failed")
+				{
+					// 접속 실패
+				} else if (infoObject.info.code == "NetConnection.Connect.Rejected") {
+					// 연결 거부
+				} else if (infoObject.info.code == "NetConnection.Connect.Success") {
+					
+				}
+			}
+			
+			private function startNetwork():void
+			{	
+				clientPublishConn = new NetConnection();
+				clientPublishConn.connect(clientPublishAddr);
+				
+				// get status information from the NetConnection object
+				clientPublishConn.addEventListener(NetStatusEvent.NET_STATUS, ncOnStatus);
+			}
+			
+			private function changeCamPubState(publish:Boolean):void
+			{
+				if (publish)
+				{
+					camera = Camera.getCamera();
+					
+					// if this system don't have camera, don't publishing 
+					if (camera == null)
+						return ;
+					
+					camera.setMode(clientWidth, clientHeight, clientFPS, false);
+					camera.setQuality(0, 80);
+					camera.setKeyFrameInterval(30);
+					
+					clientPublishStream = new NetStream(clientPublishConn);
+					// set the buffer time to zero since it is chat
+					clientPublishStream.bufferTime = 0;
+					
+					clientPublishStream.publish(clientPublishStr);
+					
+					userVideo.attachCamera(camera);
+					clientPublishStream.attachCamera(camera);
+					videoPubDefaultImage.visible = false;
+					
+					flash.external.ExternalInterface.call("userCamState", true);
+				} else  {
+					flash.external.ExternalInterface.call("userCamState", false);
+					videoPubDefaultImage.visible = true;
+					
+					clientPublishStream.close();
+					clientPublishStream = null;
+					userVideo.attachCamera(null);
+					
+				}
+			}
+			
+			protected function userVideo_clickHandler(event:MouseEvent):void
+			{
+				clientUseCamera = !clientUseCamera;
+				
+				if (clientUseCamera)
+					lblCliCamPubState.text = "Live";
+				else
+					lblCliCamPubState.text = "";
+				
+				changeCamPubState(clientUseCamera);
+				
+			}
+			
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<mx:VideoDisplay id="userVideo" x="10" y="38" width="100" height="100"
+					 click="userVideo_clickHandler(event)"/>
+	<s:Label id="lblCliCamPubState" x="0" y="0"/>
+	<s:Image id="videoPubDefaultImage" x="10" y="38" width="100" height="100"
+			 click="userVideo_clickHandler(event)"/>
+</s:Application>
