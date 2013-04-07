@@ -82,8 +82,6 @@
 			
 			private function readServerInfo(event:ResultEvent):void
 			{
-				itemContainer.removeAllElements();
-				
 				var result:Object = JSON.parse(event.result as String);
 				
 				clientPublishAddr = "rtmp://" + result.command.hostname + ":" + result.command.rtmpPort + "/live_user";
