@@ -11,12 +11,17 @@
 			import org.osmf.events.MediaPlayerStateChangeEvent;
 			import org.osmf.media.*;
 			
+			[Bindable]
+			private var itemURL:String = "/test/item.json";
+			[Bindable]
+			private var serverInfoURL:String = "/server/optimal";
+			private var urlPrefix:String = "/IndiCrowd";
 			private var clientHaveCamera:Boolean = false;
 			private var clientUseCamera:Boolean = false;
 			private var clientWidth:int = 100;
 			private var clientHeight:int = 100;
 			private var clientFPS:int = 3;
-			private var clientPublishAddr:String = "rtmp://infty123.iptime.org/live_user";
+			private var clientPublishAddr:String;
 			private var clientPublishConn:NetConnection;
 			[Bindable]
 			private var clientPublishStr:String;
@@ -48,6 +53,9 @@
 					
 				clientPublishStr =  FlexGlobals.topLevelApplication.parameters.clientPublishStr;
 				clientDefaultImage =  FlexGlobals.topLevelApplication.parameters.clientDefaultImage;
+				urlPrefix =  FlexGlobals.topLevelApplication.parameters.urlPrefix;
+				itemURL = urlPrefix + itemURL;
+				serverInfoURL = urlPrefix + serverInfoURL;
 				
 				videoPubDefaultImage.source = clientDefaultImage;
 				
@@ -70,6 +78,15 @@
 				{
 					addItemAtGroup(item);
 				}
+			}
+			
+			private function readServerInfo(event:ResultEvent):void
+			{
+				itemContainer.removeAllElements();
+				
+				var result:Object = JSON.parse(event.result as String);
+				
+				clientPublishAddr = "rtmp://" + result.command.hostname + ":" + result.command.rtmpPort + "/live_user";
 			}
 			
 			private function addItemAtGroup(item:Object):void
@@ -164,7 +181,11 @@
 	</fx:Script>
 	<fx:Declarations>
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
-		<mx:HTTPService id="itemService" url="http://localhost:8080/IndiCrowd/test/item.json" useProxy="false" method="POST" result="readItems(event)" showBusyCursor="true">
+		<mx:HTTPService id="itemService" url="{itemURL}" useProxy="false" method="GET" result="readItems(event)" showBusyCursor="true">
+			<mx:request xmlns="">
+			</mx:request>
+		</mx:HTTPService>
+		<mx:HTTPService id="serverInfoService" url="{serverInfoURL}" useProxy="false" method="GET" result="readServerInfo(event)" showBusyCursor="true">
 			<mx:request xmlns="">
 			</mx:request>
 		</mx:HTTPService>
