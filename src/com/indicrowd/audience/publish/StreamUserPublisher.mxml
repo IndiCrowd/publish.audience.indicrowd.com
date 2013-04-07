@@ -64,6 +64,7 @@
 				flash.external.ExternalInterface.addCallback("setClientDefaultImage", setClientDefaultImage);
 				
 				itemService.send();
+				serverInfoService.send();
 			}
 			
 			
