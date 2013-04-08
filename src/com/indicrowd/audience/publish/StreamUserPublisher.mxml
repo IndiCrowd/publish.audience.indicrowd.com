@@ -14,7 +14,7 @@
 			[Bindable]
 			private var itemURL:String = "/test/item.json";
 			[Bindable]
-			private var serverInfoURL:String = "/server/optimal";
+			private var serverInfoURL:String = "/server/streaming/optimal.json";
 			private var urlPrefix:String = "/IndiCrowd";
 			private var clientHaveCamera:Boolean = false;
 			private var clientUseCamera:Boolean = false;
@@ -48,9 +48,7 @@
 			
 			
 			private function init():void
-			{
-				startNetwork();
-					
+			{					
 				clientPublishStr =  FlexGlobals.topLevelApplication.parameters.clientPublishStr;
 				clientDefaultImage =  FlexGlobals.topLevelApplication.parameters.clientDefaultImage;
 				urlPrefix =  FlexGlobals.topLevelApplication.parameters.urlPrefix;
@@ -86,6 +84,7 @@
 				var result:Object = JSON.parse(event.result as String);
 				
 				clientPublishAddr = "rtmp://" + result.command.hostname + ":" + result.command.rtmpPort + "/live_user";
+				
 			}
 			
 			private function addItemAtGroup(item:Object):void
@@ -106,13 +105,18 @@
 			private function ncOnStatus(infoObject:NetStatusEvent):void
 			{
 				trace("nc: "+infoObject.info.code+" ("+infoObject.info.description+")");
-				
-				if (infoObject.info.code == "NetConnection.Connect.Failed")
+				if (infoObject.info.code == "NetConnection.Connect.Success") {
+					changeCamPubState(clientUseCamera);
+					
+					return ;
+					
+				}
+				else if (infoObject.info.code == "NetConnection.Connect.Failed")
 				{
 					// 접속 실패
 				} else if (infoObject.info.code == "NetConnection.Connect.Rejected") {
 					// 연결 거부
-				} else if (infoObject.info.code == "NetConnection.Connect.Success") {
+				} else {
 					
 				}
 			}
@@ -164,14 +168,22 @@
 			
 			protected function userVideo_clickHandler(event:MouseEvent):void
 			{
+				if (Camera.getCamera()==null)
+					return ;
+				
 				clientUseCamera = !clientUseCamera;
 				
-				if (clientUseCamera)
+				if (clientUseCamera) {
+					startNetwork();
+					
 					lblCliCamPubState.text = "Live";
+				}
 				else
+				{
+					changeCamPubState(clientUseCamera);
 					lblCliCamPubState.text = "";
+				}
 				
-				changeCamPubState(clientUseCamera);
 				
 			}
 			
