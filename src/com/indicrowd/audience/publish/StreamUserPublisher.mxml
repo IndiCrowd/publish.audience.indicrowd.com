@@ -12,10 +12,13 @@
 			import org.osmf.media.*;
 			
 			[Bindable]
-			private var itemURL:String = "/test/item.json";
+			private var itemURL:String = "/item/list.json";
 			[Bindable]
 			private var serverInfoURL:String = "/server/streaming/optimal.json";
+			[Bindable]
+			private var multimediaInfoURL:String = "/server/multimedia.json";
 			private var urlPrefix:String = "/IndiCrowd";
+			private var urlMultimediaPrefix:String = "";
 			private var clientHaveCamera:Boolean = false;
 			private var clientUseCamera:Boolean = false;
 			private var clientWidth:int = 100;
@@ -54,6 +57,7 @@
 				urlPrefix =  FlexGlobals.topLevelApplication.parameters.urlPrefix;
 				itemURL = urlPrefix + itemURL;
 				serverInfoURL = urlPrefix + serverInfoURL;
+				multimediaInfoURL = urlPrefix + multimediaInfoURL;
 				
 				videoPubDefaultImage.source = clientDefaultImage;
 				
@@ -61,8 +65,9 @@
 				flash.external.ExternalInterface.addCallback("setClientPublishStr", setClientPublishStr);
 				flash.external.ExternalInterface.addCallback("setClientDefaultImage", setClientDefaultImage);
 				
-				itemService.send();
 				serverInfoService.send();
+				
+				multimediaInfoService.send();
 			}
 			
 			
@@ -73,10 +78,12 @@
 				var result:Object = JSON.parse(event.result as String);
 				var item:Object;
 				
-				for each (item in result.list)
+				for each (item in result.command.list)
 				{
 					addItemAtGroup(item);
 				}
+				
+				itemContainer.invalidateDisplayList();
 			}
 			
 			private function readServerInfo(event:ResultEvent):void
@@ -87,16 +94,27 @@
 				
 			}
 			
+			
+			private function readMultimediaServerInfo(event:ResultEvent):void
+			{
+				var result:Object = JSON.parse(event.result as String);
+				
+				urlMultimediaPrefix = result.command.url;
+				
+				itemService.send();
+			}
+			
+			
 			private function addItemAtGroup(item:Object):void
 			{
 				var imageComponent:Image = new Image();
 				imageComponent.addEventListener(MouseEvent.CLICK, function(event:MouseEvent):void {
-					flash.external.ExternalInterface.call("useItem", item.requestName);
-				imageComponent.source = item.imageLocation;
+					flash.external.ExternalInterface.call("useItem", item.id);	
+				});
 				imageComponent.width = 40;
 				imageComponent.height = 40;
+				imageComponent.source = urlMultimediaPrefix + "/itemthumb/"+item.id;
 				imageComponent.toolTip = item.name;
-				});
 				
 				itemContainer.addElement(imageComponent);
 			}
@@ -197,6 +215,10 @@
 			</mx:request>
 		</mx:HTTPService>
 		<mx:HTTPService id="serverInfoService" url="{serverInfoURL}" useProxy="false" method="GET" result="readServerInfo(event)" showBusyCursor="true">
+			<mx:request xmlns="">
+			</mx:request>
+		</mx:HTTPService>
+		<mx:HTTPService id="multimediaInfoService" url="{multimediaInfoURL}" useProxy="false" method="GET" result="readMultimediaServerInfo(event)" showBusyCursor="true">
 			<mx:request xmlns="">
 			</mx:request>
 		</mx:HTTPService>
