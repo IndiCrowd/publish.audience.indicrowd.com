@@ -231,6 +231,6 @@
 			 click="userVideo_clickHandler(event)" />
 	<s:TileGroup id="itemContainer" x="118" y="10" width="152" height="130" orientation="rows">
 	</s:TileGroup>
-	<s:Label x="10" y="118" width="100" text="이름"/>
+	<s:Label id="lblName" x="10" y="118" width="100"/>
 	
 </s:Application>
