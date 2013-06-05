@@ -2,7 +2,7 @@
 <s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
 			   xmlns:s="library://ns.adobe.com/flex/spark"
 			   xmlns:mx="library://ns.adobe.com/flex/mx"
-			   width="280" height="150" minWidth="280" minHeight="140" initialize="init()">
+			   width="280" height="150" minWidth="280" minHeight="150" initialize="init()">
 	<fx:Script>
 		<![CDATA[
 			import mx.core.FlexGlobals;
@@ -205,6 +205,19 @@
 				
 			}
 			
+			protected function closeTutorial(event:MouseEvent):void 
+			{
+				if (event.currentTarget == item_tutorial)
+				{
+					item_tutorial.visible = false;
+					face_tutorial.visible = true;
+				} else if (event.currentTarget == face_tutorial) {
+					
+					item_tutorial.visible = false;
+					face_tutorial.visible = false;
+				}
+			}
+			
 			
 		]]>
 	</fx:Script>
@@ -233,4 +246,8 @@
 	</s:TileGroup>
 	<s:Label id="lblName" x="10" y="118" width="100"/>
 	
+	
+	<s:Image id="item_tutorial" source="@Embed(source='assets/item_tutorial.png')" width="280" height="150" visible="true" click="closeTutorial(event)" />
+	<s:Image id="face_tutorial" source="@Embed(source='assets/face_tutorial.png')" width="280" height="150" visible="false" click="closeTutorial(event)" />
+
 </s:Application>
